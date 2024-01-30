@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2020",
+    "sourceMap": true,
+    "outDir": "dist",
+    "baseUrl": "/",
+    "paths": {
+      "@prisma/*": [
+        "prisma/*"
+      ],
+      "@services/*": [
+        "src/services/*"
+      ],
+      "@util/*": [
+        "src/util/*"
+      ]
+    },
+  },
+  "include": [
+    "src/**/*"
+  ],
+}
