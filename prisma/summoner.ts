@@ -11,3 +11,12 @@ export const getAllSummoners = async () => {
     return summoners;
 }
 
+export const getSummoner = async (puuid: string) => {
+    const summoner = await prisma.summoner.findFirst({
+        where: {
+            puuid: puuid
+        }
+    })
+
+    return summoner
+}
