@@ -15,9 +15,10 @@ hook.setUsername('Gamebuff Match Refresher')
  * @param summoners[] - An array of summoners
  */
 
-async function compareMatchesForEachSummoner(summoners: Summoner[]) {
+async function getUpdatedMatchesForSummoners(summoners: Summoner[]) {
 
-    // TODO: Refactor to use a map to store keys and values for each summoner
+    const updatedMatches = new Map<{ userId: string, puuid: string }, string[]>();
+
     console.log(`Starting match refresh for ${summoners.length} summoners...`)
 
     let i = 1;
@@ -25,7 +26,8 @@ async function compareMatchesForEachSummoner(summoners: Summoner[]) {
 
         console.log(`[${i}/${summoners.length}] Checking matches for summoner: ${summoner.name} `);
         const matchList = await getMatchIdList(summoner.puuid);
-        const summoner_mongo = await getSummoner(summoner.puuid);
+
+        console.log(`[DEBUG] ${summoner.name}:\n[RECENT MATCH]: ${summoner.recentMatchId}\n[ALL] ${matchList}`)
 
         // Case where the first match is already the most recent one we have in storage
         if (matchList[0] === summoner.recentMatchId) {
@@ -39,24 +41,39 @@ async function compareMatchesForEachSummoner(summoners: Summoner[]) {
         for (let i = 0; i < matchList.length; i++) {
             if (summoner.recentMatchId === matchList[i]) {
                 console.log(`Found ${i} new matches for: ${summoner.name}`);
-                // hook.send(`Found ${i} new matches for: ${summoner.name}`);
+
                 // Push all the new matches to array
                 for (let j = 0; j < i; j++) {
                     newMatchArray.push(matchList[j]);
-                    console.log(`Pushing match: ${matchList[j]}`);
                 }
+
             }
         }
 
+        // If the summoner has zero matches, assume all matches are new.
+        if (newMatchArray.length === 0) {
+            console.log('All matches are new, adding all...');
+            newMatchArray.push(matchList);
+        }
+
+        updatedMatches.set({ userId: summoner.puuid, puuid: summoner.userId }, newMatchArray)
+
         i++;
     }
+
+    return updatedMatches;
 }
+
+async function postMatches(matches) {
+    const summoner = getSummoner(m)
+}
+
 
 async function main() {
     const summoners = await getAllSummoners();
     if (summoners) {
         // TODO: return new match list with summoners
-        await compareMatchesForEachSummoner(summoners);
+        const updatedMatches = await getUpdatedMatchesForSummoners(summoners);
         // TODO: create separate function for updating users summoner via match list
     }
 }
