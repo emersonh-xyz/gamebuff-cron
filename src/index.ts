@@ -9,7 +9,7 @@ const bree = new Bree({
 
     jobs: [{
         name: 'refresh-matches',
-        interval: 'every 30 seconds',
+        interval: 'every 10 minutes',
     }]
 });
 
@@ -19,6 +19,6 @@ const bree = new Bree({
         await bree.start();
     } catch (e) {
         console.log(e);
-    }
+    }h refresh and league
 
 })();

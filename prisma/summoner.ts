@@ -20,3 +20,19 @@ export const getSummoner = async (puuid: string) => {
 
     return summoner
 }
+
+export const updateSummonerRecentMatchId = async (id: string, matchId: string) => {
+
+    const summoner = await prisma.summoner.update({
+        where: {
+            id: id
+        },
+        data: {
+            recentMatchId: matchId
+        }
+    })
+
+    return summoner;
+
+
+}

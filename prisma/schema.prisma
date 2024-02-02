@@ -26,9 +26,23 @@ model Summoner {
   recentMatchId String
 }
 
-model PendingMatch {
+model LeagueMatch {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   createdAt DateTime @default(now())
-  puuid     String
+  updatedAt DateTime @updatedAt
+  userId    String
   matchId   String
+  puuid     String
+  gameName  String
+}
+
+type WorkoutPlan {
+  exercises  Exercise[]
+  intensitiy Int
+}
+
+type Exercise {
+  name      String
+  count     Int
+  completed Boolean
 }
