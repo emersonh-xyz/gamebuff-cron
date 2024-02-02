@@ -19,6 +19,6 @@ const bree = new Bree({
         await bree.start();
     } catch (e) {
         console.log(e);
-    }h refresh and league
+    }
 
 })();
