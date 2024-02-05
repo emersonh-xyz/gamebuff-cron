@@ -1,16 +1,14 @@
 import { PrismaClient, Summoner } from '@prisma/client'
 import { getAllSummoners, getSummoner, updateSummonerRecentMatchId } from "../../prisma/summoner.js"
 import { createLeagueMatch } from "../../prisma/league-match.js"
-import getMatchIdList from "../util/league.util.js"
+import { Participant, getMatchIdList } from "../util/league.util.js"
+import { getMatch } from "../util/league.util.js"
 import { Webhook, MessageBuilder } from 'discord-webhook-node'
 
 
 // Import Prisma Client
 const prisma = new PrismaClient()
 const hook = new Webhook(process.env.WEBHOOK_URL)
-
-hook.setUsername('Gamebuff')
-
 
 /**
  * Function responsible for comparing matches across each summoner
@@ -65,12 +63,18 @@ async function getUpdatedMatchesForSummoners(summoners: Summoner[]) {
 
         updatedMatches.set({ userId: summoner.userId, puuid: summoner.puuid, gameName: summoner.gameName }, newMatchArray);
 
-        // TODO: UPDATE USERS MOST RECENT MATCH ID 
-
         await updateSummonerRecentMatchId(summoner.id, matchList[0]);
     }
 
     return updatedMatches;
+}
+
+function findParticipant(participants: Participant[], puuid: string) {
+    for (let participant of participants) {
+        if (participant.puuid === puuid) {
+            return participant;
+        }
+    }
 }
 
 async function postMatches(matchesMap: Map<{ userId: string, puuid: string, gameName: string }, string[]>) {
@@ -85,28 +89,49 @@ async function postMatches(matchesMap: Map<{ userId: string, puuid: string, game
 
         for (let match of matches) {
 
-            const create = await createLeagueMatch(userId, match, gameName, puuid);
-            if (create) {
+            // const create = await createLeagueMatch(userId, match, gameName, puuid);
 
-                const embed = new MessageBuilder()
-                    // .setTitle('My title here')
-                    .setAuthor('gamebuff.gg')
-                    .setTitle(`${gameName} better start cranking out those push-ups`)
-                    .setURL(`https://gamebuff.gg/app/match-details/${match}`)
-                    // .addField('First field', 'this is inline', true)
-                    .setColor('#3B82F6')
-                    // .setThumbnail('https://cdn.discordapp.com/embed/avatars/0.png')
-                    // .setImage('https://cdn.discordapp.com/embed/avatars/0.png')
-                    .setTimestamp();
+            const matchData = await getMatch(match);
+            const participant = findParticipant(matchData.info.participants, puuid);
 
-                hook.send(embed)
-            }
+            hook.setUsername('gamebuff');
+            hook.setAvatar("https://cdn.discordapp.com/attachments/314848084733460482/1203071862675083344/image.png")
+
+            const embed = new MessageBuilder()
+                .setAuthor('gamebuff.gg')
+                .setTitle(createTitleString(participant, gameName))
+                .setURL(`https://gamebuff.gg/app/match-details/${match}`)
+                .addField('Game Mode', `${matchData.info.gameMode}`, true)
+                .addField('Kills', `${participant.kills}`, true)
+                .addField('Deaths', `${participant.deaths}`, true)
+                .addField('Assists', `${participant.assists}`, true)
+                .setColor('#3B82F6')
+                .setThumbnail(`${process.env.LEAGUE_ASSETS}/champion/${participant.championName}.png`)
+                .setTimestamp();
+
+            hook.send(embed);
+
         }
 
     }
 
 }
 
+
+function createTitleString(participant: Participant, name: string) {
+
+    // TODO: Create 5 more variations of this string
+
+    if (participant.win && participant.kills > 20) {
+        return `🔥 ${name} is on fire with ${participant.kills} kills on ${participant.championName}!`
+    }
+
+    if (participant.win) {
+        return `🔥 ${name} doesn't play on ${participant.championName}!`
+    }
+
+    return `${name} might want to put down the ${participant.championName} 😅`
+}
 
 async function main() {
     const summoners = await getAllSummoners();

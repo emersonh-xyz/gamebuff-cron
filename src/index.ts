@@ -9,7 +9,8 @@ const bree = new Bree({
 
     jobs: [{
         name: 'refresh-matches',
-        interval: 'every 10 minutes',
+        interval: 'every 3 minutes',
+
     }]
 });
 
